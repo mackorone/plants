@@ -42,7 +42,7 @@ class Committer:
                 f"user.email={cls.EMAIL}",
                 "commit",
                 "-m",
-                f"Changes from run {run_number} via {event_name} trigger",
+                f"Run {run_number} via {event_name}",
             ]
         )
 
