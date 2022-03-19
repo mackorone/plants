@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import logging
-import os
 import subprocess
 from typing import Optional, Sequence
 
-from .external import external
+from .environment import Environment
+from .subprocess_utils import SubprocessUtils
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Committer:
     @classmethod
     def commit_and_push_if_github_actions(cls) -> None:
-        github_actions = cls._get_env("GITHUB_ACTIONS")
+        github_actions = Environment.get_env("GITHUB_ACTIONS")
         if github_actions != "true":
             logger.info("Not GitHub Actions, skipping")
             return
 
-        run_number = cls._get_env("GITHUB_RUN_NUMBER")
-        event_name = cls._get_env("GITHUB_EVENT_NAME")
+        run_number = Environment.get_env("GITHUB_RUN_NUMBER")
+        event_name = Environment.get_env("GITHUB_EVENT_NAME")
         cls.commit_and_push(
             commit_message=f"Run {run_number} via {event_name}",
             user_name="github-actions[bot]",
@@ -55,11 +55,5 @@ class Committer:
         cls._run(["git", "push"])
 
     @classmethod
-    @external
-    def _get_env(cls, name: str) -> Optional[str]:
-        return os.environ.get(name)
-
-    @classmethod
-    @external
     def _run(cls, args: Sequence[str]) -> "subprocess.CompletedProcess[str]":
-        return subprocess.run(args=args, capture_output=True, check=True, text=True)
+        return SubprocessUtils.run(args=args, check=True)
