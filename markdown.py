@@ -2,7 +2,7 @@
 
 
 class MarkdownEscapedString(str):
-    def __new__(self, text: str) -> str:
+    def __new__(cls, text: str) -> str:
         text = text.replace("\n", "<br/>")
         for pattern in [
             "\\",  # Existing backslashes
@@ -20,4 +20,4 @@ class MarkdownEscapedString(str):
             "~",  # Strikethrough
         ]:
             text = text.replace(pattern, f"\\{pattern}")
-        return str.__new__(str, text)
+        return super().__new__(cls, text)
