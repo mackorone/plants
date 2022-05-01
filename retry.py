@@ -47,5 +47,5 @@ def retry(
 
 
 @external
-async def sleep(sleep_seconds: float) -> None:
-    await asyncio.sleep(sleep_seconds)
+async def sleep(seconds: float) -> None:
+    await asyncio.sleep(seconds)
