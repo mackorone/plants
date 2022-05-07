@@ -5,15 +5,13 @@ import contextlib
 import functools
 import itertools
 import logging
-from typing import Awaitable, Callable, Iterator, TypeVar
+from typing import Awaitable, Callable, Iterator, ParamSpec, TypeVar
 
-from pyre_extensions import ParameterSpecification
-
-from plants.external import external
+from .external import external
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-TParams = ParameterSpecification("TParams")
+TParams = ParamSpec("TParams")
 TReturn = TypeVar("TReturn")
 
 

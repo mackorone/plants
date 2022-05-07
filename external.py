@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import functools
-from typing import Callable, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
-from pyre_extensions import ParameterSpecification
-
-TParams = ParameterSpecification("TParams")
+TParams = ParamSpec("TParams")
 TReturn = TypeVar("TReturn")
 
 
