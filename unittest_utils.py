@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Callable, Sequence, Type, TypeVar, Union
+from typing import Any, Callable, Sequence, TypeVar, Union
 from unittest import TestCase, mock
 
 T = TypeVar("T")
@@ -12,7 +12,7 @@ class UnittestUtils:
         cls,
         test_case: TestCase,
         target: str,
-        new_callable: Type[T],
+        new_callable: Callable[[], T],
     ) -> T:
         """Convenience for using mock.patch in setUp and asyncSetUp methods"""
         patcher = mock.patch(target, new_callable=new_callable)
