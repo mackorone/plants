@@ -22,7 +22,7 @@ def retry(
     num_attempts: int,
     sleep_seconds: float,
 ) -> Iterator[Callable[TParams, Awaitable[TReturn]]]:
-    assert num_attempts >= 1
+    assert num_attempts >= 2
     assert sleep_seconds > 0
 
     @functools.wraps(func)
