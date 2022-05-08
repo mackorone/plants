@@ -13,3 +13,5 @@ Setup is as follows:
 1. If using GitHub Actions, update the checkout step to include: `submodules: recursive`
 
 Requires Python 3.10 or greater.
+
+Tests live here: https://github.com/mackorone/plants-tests
