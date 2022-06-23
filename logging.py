@@ -31,13 +31,11 @@ class LogFormatter(logging.Formatter):
         super().__init__(
             fmt=(
                 asctime_color
-                + "(%(asctime)s)"
+                + "(%(asctime)s) "
                 + Color.RESET.get_code()
-                + " "
                 + "%(level_color)s"
-                + "[%(levelname)s]"
+                + "[%(levelname)s] "
                 + Color.RESET.get_code()
-                + " "
                 + "%(message)s"
             )
         )
@@ -74,7 +72,7 @@ def configure_root_logger(
     if colorful_output is None:
         colorful_output = is_atty
     if escape_newlines is None:
-        escape_newlines = not is_atty
+        escape_newlines = False
     formatter = LogFormatter(
         colorful_output=colorful_output, escape_newlines=escape_newlines
     )
