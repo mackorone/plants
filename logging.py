@@ -2,7 +2,6 @@
 
 import enum
 import logging
-from typing import Optional
 
 
 class Color(enum.Enum):
@@ -64,18 +63,13 @@ class LogFormatter(logging.Formatter):
 def configure_root_logger(
     *,
     level: int = logging.INFO,
-    colorful_output: Optional[bool] = None,
-    escape_newlines: Optional[bool] = None,
+    colorful_output: bool = True,
+    escape_newlines: bool = False,
 ) -> None:
-    handler = logging.StreamHandler()
-    is_atty = handler.stream.isatty()
-    if colorful_output is None:
-        colorful_output = is_atty
-    if escape_newlines is None:
-        escape_newlines = False
     formatter = LogFormatter(
         colorful_output=colorful_output, escape_newlines=escape_newlines
     )
+    handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     root = logging.getLogger()
     root.addHandler(handler)
