@@ -8,7 +8,7 @@ from typing import Optional
 
 from .environment import Environment
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Color(enum.Enum):
@@ -73,7 +73,7 @@ class LogFormatter(logging.Formatter):
         return Color.TURQUOISE
 
 
-def configure_root_logger(
+def configure_logging(
     *,
     level: int = logging.INFO,
     colorize: Optional[bool] = None,
@@ -81,14 +81,16 @@ def configure_root_logger(
 ) -> None:
     handler = logging.StreamHandler()
     if colorize is None:
-        colorize = handler.stream.isatty() or Environment.is_github_actions()
+        # Use `any` instead of `or` to prevent surprises due to short circuiting
+        colorize = any([handler.stream.isatty(), Environment.is_github_actions()])
     formatter = LogFormatter(colorize=colorize, escape_newlines=escape_newlines)
     handler.setFormatter(formatter)
+
     root = logging.getLogger()
     root.addHandler(handler)
     root.setLevel(level)
 
-    # Install custom hook via hacky multiline lambda
+    # Install custom exception hook via hacky multiline lambda
     sys.excepthook = lambda *args: (
         logger.critical("Unhandled exception"),
         traceback.print_last(),
