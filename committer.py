@@ -13,8 +13,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Committer:
     @classmethod
     def commit_and_push_if_github_actions(cls) -> None:
-        github_actions = Environment.get_env("GITHUB_ACTIONS")
-        if github_actions != "true":
+        if not Environment.is_github_actions():
             logger.info("Not GitHub Actions, skipping")
             return
 

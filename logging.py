@@ -2,6 +2,13 @@
 
 import enum
 import logging
+import sys
+import traceback
+from typing import Optional
+
+from .environment import Environment
+
+logger = logging.getLogger(__name__)
 
 
 class Color(enum.Enum):
@@ -10,6 +17,7 @@ class Color(enum.Enum):
     LIGHT_GREEN = 92
     LIGHT_YELLOW = 93
     LIGHT_BLUE = 94
+    LIGHT_PURPLE = 95
     TURQUOISE = 96
 
     def get_code(self) -> str:
@@ -17,13 +25,16 @@ class Color(enum.Enum):
 
 
 class LogFormatter(logging.Formatter):
-    def __init__(self, *, colorful_output: bool, escape_newlines: bool) -> None:
-        self._colorful_output = colorful_output
+    def __init__(self, *, colorize: bool, escape_newlines: bool) -> None:
+        self._colorize = colorize
         self._escape_newlines = escape_newlines
 
         asctime_color = ""
-        if self._colorful_output:
+        reset_color = ""
+        if self._colorize:
             asctime_color = Color.LIGHT_BLUE.get_code()
+            reset_color = Color.RESET.get_code()
+
         self.default_time_format = "%Y-%m-%d %H:%M:%S"
         self.default_msec_format = "%s.%03d"
 
@@ -31,17 +42,17 @@ class LogFormatter(logging.Formatter):
             fmt=(
                 asctime_color
                 + "(%(asctime)s) "
-                + Color.RESET.get_code()
+                + reset_color
                 + "%(level_color)s"
                 + "[%(levelname)s] "
-                + Color.RESET.get_code()
+                + reset_color
                 + "%(message)s"
             )
         )
 
     def format(self, record: logging.LogRecord) -> str:
         level_color = ""
-        if self._colorful_output:
+        if self._colorize:
             level_color = self._get_level_color(record.levelno).get_code()
         setattr(record, "level_color", level_color)
         message = super().format(record)
@@ -51,6 +62,8 @@ class LogFormatter(logging.Formatter):
 
     @classmethod
     def _get_level_color(cls, level: int) -> Color:
+        if level >= logging.CRITICAL:
+            return Color.LIGHT_PURPLE
         if level >= logging.ERROR:
             return Color.LIGHT_RED
         if level >= logging.WARNING:
@@ -63,14 +76,20 @@ class LogFormatter(logging.Formatter):
 def configure_root_logger(
     *,
     level: int = logging.INFO,
-    colorful_output: bool = True,
+    colorize: Optional[bool] = None,
     escape_newlines: bool = False,
 ) -> None:
-    formatter = LogFormatter(
-        colorful_output=colorful_output, escape_newlines=escape_newlines
-    )
     handler = logging.StreamHandler()
+    if colorize is None:
+        colorize = handler.stream.isatty() or Environment.is_github_actions()
+    formatter = LogFormatter(colorize=colorize, escape_newlines=escape_newlines)
     handler.setFormatter(formatter)
     root = logging.getLogger()
     root.addHandler(handler)
     root.setLevel(level)
+
+    # Install custom hook via hacky multiline lambda
+    sys.excepthook = lambda *args: (
+        logger.critical("Unhandled exception"),
+        traceback.print_last(),
+    )
