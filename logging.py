@@ -91,7 +91,11 @@ def configure_logging(
     root.setLevel(level)
 
     # Install custom exception hook via hacky multiline lambda
-    sys.excepthook = lambda *args: (
-        logger.critical("Unhandled exception"),
-        traceback.print_last(),
+    sys.excepthook = lambda *args: logger.critical(
+        "Unhandled exception\n"
+        + "".join(
+            traceback.format_exception(
+                sys.last_type, sys.last_value, sys.last_traceback
+            )
+        ).strip()
     )
