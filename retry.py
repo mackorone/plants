@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import asyncio
 import contextlib
 import functools
 import itertools
 import logging
 from typing import Awaitable, Callable, Iterator, ParamSpec, TypeVar
 
-from .external import external
+from .sleep import sleep
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -42,8 +41,3 @@ def retry(
         assert False
 
     yield wrapper
-
-
-@external
-async def sleep(seconds: float) -> None:
-    await asyncio.sleep(seconds)
