@@ -2,6 +2,7 @@
 
 import enum
 import logging
+import re
 import sys
 import traceback
 from typing import Optional
@@ -29,35 +30,29 @@ class LogFormatter(logging.Formatter):
         self._colorize = colorize
         self._escape_newlines = escape_newlines
 
-        asctime_color = ""
-        reset_color = ""
-        if self._colorize:
-            asctime_color = Color.LIGHT_BLUE.get_code()
-            reset_color = Color.RESET.get_code()
-
         self.default_time_format = "%Y-%m-%d %H:%M:%S"
         self.default_msec_format = "%s.%03d"
 
         super().__init__(
             fmt=(
-                asctime_color
+                Color.LIGHT_BLUE.get_code()
                 + "(%(asctime)s) "
-                + reset_color
+                + Color.RESET.get_code()
                 + "%(level_color)s"
                 + "[%(levelname)s] "
-                + reset_color
+                + Color.RESET.get_code()
                 + "%(message)s"
             )
         )
 
     def format(self, record: logging.LogRecord) -> str:
-        level_color = ""
-        if self._colorize:
-            level_color = self._get_level_color(record.levelno).get_code()
+        level_color = self._get_level_color(record.levelno).get_code()
         setattr(record, "level_color", level_color)
         message = super().format(record)
         if self._escape_newlines:
             message = message.replace("\n", "\\n")
+        if not self._colorize:
+            message = re.sub("\u001b\\[[0-9]{1,2}m", "", message)
         return message
 
     @classmethod
@@ -90,7 +85,7 @@ def configure_logging(
     root.addHandler(handler)
     root.setLevel(level)
 
-    # Install custom exception hook via hacky multiline lambda
+    # Install custom exception hook
     sys.excepthook = lambda *args: logger.critical(
         "Unhandled exception\n"
         + "".join(
