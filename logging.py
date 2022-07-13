@@ -36,12 +36,12 @@ class LogFormatter(logging.Formatter):
         super().__init__(
             fmt=(
                 Color.LIGHT_BLUE.get_code()
-                + "(%(asctime)s) "
+                + "(%(asctime)s)"
                 + Color.RESET.get_code()
-                + "%(level_color)s"
-                + "[%(levelname)s] "
+                + " %(level_color)s"
+                + "[%(levelname)s]"
                 + Color.RESET.get_code()
-                + "%(message)s"
+                + " %(message)s"
             )
         )
 
