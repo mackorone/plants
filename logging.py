@@ -24,6 +24,9 @@ class Color(enum.Enum):
     def get_code(self) -> str:
         return f"\u001b[{self.value}m"
 
+    def __call__(self, text: str) -> str:
+        return self.get_code() + text + Color.RESET.get_code()
+
 
 class LogFormatter(logging.Formatter):
     def __init__(self, *, colorize: bool, escape_newlines: bool) -> None:
