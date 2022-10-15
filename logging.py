@@ -25,6 +25,8 @@ class Color(enum.Enum):
         return f"\u001b[{self.value}m"
 
     def __call__(self, text: str) -> str:
+        # First remove existing colors, then wrap in new color
+        text = re.sub("\u001b\\[[0-9]{1,2}m", "", text)
         return self.get_code() + text + Color.RESET.get_code()
 
 
