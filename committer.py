@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
-import subprocess
-from typing import Optional, Sequence
+from typing import Optional, Tuple
 
 from .environment import Environment
 from .subprocess_utils import SubprocessUtils
@@ -32,14 +31,14 @@ class Committer:
         user_name: Optional[str] = None,
         user_email: Optional[str] = None,
     ) -> None:
-        result = cls._run(["git", "status", "--short"])
-        any_changes = bool(result.stdout)
+        stdout = cls._run(("git", "status", "--short"))
+        any_changes = bool(stdout)
         if not any_changes:
             logger.info("No changes, skipping")
             return
 
         logger.info("Staging changes")
-        cls._run(["git", "add", "--all"])
+        cls._run(("git", "add", "--all"))
 
         logger.info("Committing changes")
         args = ["git"]
@@ -48,11 +47,12 @@ class Committer:
         if user_email:
             args += ["-c", f"user.email={user_email}"]
         args += ["commit", "-m", commit_message]
-        cls._run(args)
+        cls._run(tuple(args))
 
         logger.info("Pushing changes")
-        cls._run(["git", "push"])
+        cls._run(("git", "push"))
 
     @classmethod
-    def _run(cls, args: Sequence[str]) -> "subprocess.CompletedProcess[str]":
-        return SubprocessUtils.run(args=args, check=True)
+    def _run(cls, args: Tuple[str, ...]) -> str:
+        result = SubprocessUtils.run(args, raise_if_nonzero=True)
+        return result.stdout

@@ -22,7 +22,7 @@ class Environment:
 
     @classmethod
     def get_repo_root(cls) -> pathlib.Path:
-        result = SubprocessUtils.run(["git", "rev-parse", "--show-toplevel"])
+        result = SubprocessUtils.run(("git", "rev-parse", "--show-toplevel"))
         return pathlib.Path(result.stdout.strip())
 
     @classmethod
