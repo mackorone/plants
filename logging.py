@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import enum
+import inspect
 import logging
 import re
 import sys
@@ -31,9 +32,12 @@ class Color(enum.Enum):
 
 
 class LogFormatter(logging.Formatter):
-    def __init__(self, *, colorize: bool, escape_newlines: bool) -> None:
+    def __init__(
+        self, *, colorize: bool, escape_newlines: bool, auto_indent: bool
+    ) -> None:
         self._colorize = colorize
         self._escape_newlines = escape_newlines
+        self._auto_indent = auto_indent
 
         self.default_time_format = "%Y-%m-%d %H:%M:%S"
         self.default_msec_format = "%s.%03d"
@@ -51,6 +55,21 @@ class LogFormatter(logging.Formatter):
         )
 
     def format(self, record: logging.LogRecord) -> str:
+        if self._auto_indent:
+            frames = inspect.getouterframes(inspect.currentframe())
+            # Ignore the first eight, logging-related frames. Also ignore the
+            # last frame so that cumulative indentation is relative to the first
+            # code block, usually just the main method. Start indentation level
+            # at zero so that lines immediately within that first code block
+            # don't get extra-indented.
+            indentation = -1
+            for frame in frames[8:-1]:
+                # pyre-fixme[16]
+                line = frame.code_context[frame.index]
+                # Assume that each level of indentation if four spaces
+                indentation += line.index(line.lstrip()) // 4
+            record.msg = " " * indentation + record.msg
+
         level_color = self._get_level_color(record.levelno).get_code()
         setattr(record, "level_color", level_color)
         message = super().format(record)
@@ -78,12 +97,15 @@ def configure_logging(
     level: int = logging.INFO,
     colorize: Optional[bool] = None,
     escape_newlines: bool = False,
+    auto_indent: bool = False,
 ) -> None:
     handler = logging.StreamHandler()
     if colorize is None:
         # Use `any` instead of `or` to prevent surprises due to short circuiting
         colorize = any([handler.stream.isatty(), Environment.is_github_actions()])
-    formatter = LogFormatter(colorize=colorize, escape_newlines=escape_newlines)
+    formatter = LogFormatter(
+        colorize=colorize, escape_newlines=escape_newlines, auto_indent=auto_indent
+    )
     handler.setFormatter(formatter)
 
     root = logging.getLogger()
