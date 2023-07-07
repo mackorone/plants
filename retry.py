@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import contextlib
 import functools
 import itertools
 import logging
-from typing import Awaitable, Callable, Iterator, ParamSpec, TypeVar
+from types import TracebackType
+from typing import (
+    Awaitable,
+    Callable,
+    Iterator,
+    Optional,
+    ParamSpec,
+    Type,
+    TypeVar,
+)
 
 from .sleep import sleep
 
@@ -29,15 +40,75 @@ def retry(
         for i in itertools.count():
             try:
                 return await func(*args, **kwargs)
-            except Exception:
+            except Exception as e:
                 if i == num_attempts - 1:
                     raise
-                logger.exception("Caught retryable exception")
-                logger.info(
-                    f"Sleeping for {sleep_seconds} second(s), "
-                    f"{num_attempts - 1 - i} attempt(s) remaining..."
+                await _log_exception_and_sleep(
+                    exception=e,
+                    sleep_seconds=sleep_seconds,
+                    num_remaining=num_attempts - 1 - i,
                 )
-                await sleep(sleep_seconds)
         assert False
 
     yield wrapper
+
+
+class AttemptFactory:
+    def __init__(self, *, num_attempts: int, sleep_seconds: float) -> None:
+        self.num_attempts = num_attempts
+        self.sleep_seconds = sleep_seconds
+        self.current_attempt = 0
+        self.success = False
+
+    def __iter__(self) -> AttemptFactory:
+        return self
+
+    def __next__(self) -> Attempt:
+        if self.success:
+            raise StopIteration
+        self.current_attempt += 1
+        return Attempt(self)
+
+    def num_remaining(self) -> int:
+        assert self.current_attempt <= self.num_attempts
+        return self.num_attempts - self.current_attempt
+
+
+class Attempt:
+    def __init__(self, factory: AttemptFactory) -> None:
+        self.factory = factory
+
+    async def __aenter__(self) -> Attempt:
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> bool:
+        if exc is None:
+            self.factory.success = True
+            return False
+        elif self.factory.num_remaining() == 0:
+            return False
+        await _log_exception_and_sleep(
+            exception=exc,
+            sleep_seconds=self.factory.sleep_seconds,
+            num_remaining=self.factory.num_remaining(),
+        )
+        # Suppress the exception
+        return True
+
+
+async def _log_exception_and_sleep(
+    exception: BaseException,
+    sleep_seconds: float,
+    num_remaining: int,
+) -> None:
+    logger.exception("Caught retryable exception", exc_info=exception)
+    logger.info(
+        f"Sleeping for {sleep_seconds} second(s), "
+        f"{num_remaining} attempt(s) remaining..."
+    )
+    await sleep(sleep_seconds)
