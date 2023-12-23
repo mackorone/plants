@@ -12,6 +12,7 @@ Setup is as follows:
 1. Add the submodule (from the `src` directory): `git submodule add git@github.com:mackorone/plants.git`
 1. If using GitHub Actions, update the checkout step to include: `submodules: recursive`
 1. When cloning a project that uses `plants`, use `git clone --recurse-submodules`
+   - If you forget, just run `git submodule update --init --recursive --remote`
 
 Requires Python 3.10 or greater.
 
