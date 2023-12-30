@@ -29,3 +29,10 @@ class Environment:
     @external
     def is_github_actions(cls) -> bool:
         return cls.get_env("GITHUB_ACTIONS") == "true"
+
+    @classmethod
+    @external
+    def is_push_github_action(cls) -> bool:
+        if not cls.is_github_actions():
+            return False
+        return cls.get_env("GITHUB_EVENT_NAME") == "push"
