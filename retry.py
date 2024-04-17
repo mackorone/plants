@@ -32,6 +32,14 @@ def retry(
     num_attempts: int,
     sleep_seconds: float,
 ) -> Iterator[Callable[TParams, Awaitable[TReturn]]]:
+    """
+    Retry a function.
+
+    Usage:
+
+        with retry(func, num_attempts=3, sleep_seconds=1) as wrapper:
+            await wrapper(...)
+    """
     assert num_attempts >= 2
     assert sleep_seconds > 0
 
@@ -54,6 +62,16 @@ def retry(
 
 
 class AttemptFactory:
+    """
+    Retry an arbitrary block of code.
+
+    Usage:
+
+        for attempt in AttemptFactory(num_attempts=3, sleep_seconds=1):
+            async with attempt:
+                # Do something
+    """
+
     def __init__(self, *, num_attempts: int, sleep_seconds: float) -> None:
         self.num_attempts = num_attempts
         self.sleep_seconds = sleep_seconds
