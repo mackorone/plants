@@ -21,6 +21,7 @@ class Color(enum.Enum):
     LIGHT_BLUE = 94
     LIGHT_PURPLE = 95
     TURQUOISE = 96
+    LIGHT_GRAY = 97
 
     def get_code(self) -> str:
         return f"\u001b[{self.value}m"
