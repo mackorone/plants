@@ -10,7 +10,7 @@ TParams = ParamSpec("TParams")
 TReturn = TypeVar("TReturn")
 
 
-class InvalidFunctionError(Exception):
+class IncompatibleFunctionError(Exception):
     pass
 
 
@@ -19,14 +19,14 @@ async def rerun_interactively(
     *args: TParams.args,
     **kwargs: TParams.kwargs,
 ) -> None:
-    module = None
     module_name = func.__module__
     function_name = func.__name__
     if module_name == "__main__":
-        raise InvalidFunctionError(
+        raise IncompatibleFunctionError(
             "Cannot reload '{function_name}' because it lives in the main module"
         )
 
+    module = None
     while True:
         try:
             if not module:
