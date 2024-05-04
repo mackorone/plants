@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import abc
 import hashlib
 import json
 import logging
@@ -20,7 +21,25 @@ TKey = TypeVar("TKey", bound=str)
 TValue = TypeVar("TValue")
 
 
-class ReadThroughCache(Generic[TKey, TValue]):
+class Cache(abc.ABC, Generic[TKey, TValue]):
+    @abc.abstractmethod
+    async def get(self, key: TKey, func: Callable[[TKey], Awaitable[TValue]]) -> TValue:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def print_summary(self) -> None:
+        raise NotImplementedError()
+
+
+class NoCache(Cache[TKey, TValue]):
+    async def get(self, key: TKey, func: Callable[[TKey], Awaitable[TValue]]) -> TValue:
+        return await func(key)
+
+    def print_summary(self) -> None:
+        pass
+
+
+class ReadThroughCache(Cache[TKey, TValue]):
     def __init__(
         self,
         cache_dir: pathlib.Path,
