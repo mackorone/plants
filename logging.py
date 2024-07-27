@@ -110,6 +110,7 @@ def configure_logging(
     handler.setFormatter(formatter)
 
     root = logging.getLogger()
+    root.handlers.clear()
     root.addHandler(handler)
     root.setLevel(level)
 
